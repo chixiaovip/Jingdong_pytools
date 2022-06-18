@@ -1,5 +1,7 @@
 import datetime
 import time
+import keyboard
+import pandas
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -112,6 +114,34 @@ def buy(times,speed):
                     now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
                     print("======提交订单成功，请手动输入密码支付 时间：%s" % now)
                     break
+            # 点击立即支付按钮
+            while True:
+                try:
+                    if browser.find_element(By.XPATH, '//*[@class="base-button pointer-g"]').text == "立即支付":
+                        browser.find_element(By.XPATH, '//*[@class="base-button pointer-g"]').click()
+                except:
+                    now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                    print("======点击立即支付，请手动输入密码支付 时间：%s" % now)
+                    break
+            # 输入密码并点击点击立即支付按钮
+            if password != "0" and len(password) == 6:
+                while True:
+                    try:
+                        if browser.find_element(By.XPATH, '//*[@class="payment"]/div[2]/div[1]/div[1]/div[1]').text == "立即支付":
+                            browser.find_element(By.XPATH, '//*[@id="baseMode"]/div/div[2]/div/div[1]/div[2]').click()
+                            i = 0
+                            while True:
+                                keyboard.press(password[i])
+                                keyboard.release(password[i])
+                                i = i + 1
+                                if i == 6:
+                                    break
+                            if datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f') >= times_pay:
+                                browser.find_element(By.XPATH, '//*[@class="payment"]/div[2]/div[1]/div[1]/div[1]').click()
+                    except:
+                        now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')
+                        print("======点击立即支付成功，请关注订单状态 时间：%s" % now)
+                        break
         else:
             time.sleep(speed)
 
@@ -119,11 +149,15 @@ def buy(times,speed):
 # （1）id定位 driver.find_element(by=By.ID,"id")
 # （2）name定位 driver.find_element(by=By.NAME,"name")
 # （3）class定位 driver.find_element(by=By.Class_NAME,"class_name")
+# （4）XPATH定位 driver.find_element(By.XPATH,"XPATH")
 
 # 抢购主函数
 if __name__ == "__main__":
     times = input("请输入抢购时间，格式如(2022-06-15 20:00:00.000000):")
-    speed = int(input("请输入延迟时间，单位毫秒，只需输入数字:"))/1000
+    speed = int(input("请输入刷新延迟时间，单位毫秒，只需输入数字:"))/1000
+    password = str(input("请输入6位支付密码，输入0则自行输入密码支付:"))
+    if password != "0" and len(password) == 6:
+        times_pay = pandas.to_datetime(times, format='%Y-%m-%d %H:%M:%S.%f', errors='coerce') + datetime.timedelta(minutes=int(input("请输入付款延迟时间，单位秒，只需输入数字:")))
     browser = webdriver.Chrome()
     browser.set_window_size(1024,768)
     login()
